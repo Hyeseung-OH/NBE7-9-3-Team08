@@ -10,7 +10,7 @@ const nextConfig = {
     if (process.env.NEXT_PUBLIC_DEV_PROXY === 'true') {
       return [
         {
-          source: "/api/:path((?!analysis/stream).*)",
+          source: "/api/:path*)",
           destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/:path*`,
         },
       ];
