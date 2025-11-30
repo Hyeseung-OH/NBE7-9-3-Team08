@@ -86,7 +86,7 @@ const normalize = (text: string) => text.replace(/\s+/g, "")
 
 export function useAnalysisProgress(repoUrl?: string | null) {
   const router = useRouter()
-  const { user, isAuthed, isInitializing } = useRequireAuth() // [변경] 인증 상태 참조
+  const { user, isAuthed, isInitializing } = useRequireAuth()
   const [progress, setProgress] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
   const [statusMessage, setStatusMessage] = useState("분석 준비 중...")
@@ -115,12 +115,22 @@ export function useAnalysisProgress(repoUrl?: string | null) {
   const aliasToLabel: Record<string, string> = useMemo(
     () => ({
       GitHub데이터수집완료: "AI 평가",
-      AI평가완료: "AI 평가",
+      AI평가: "AI 평가",
+      AI평가완료: "AI 평가", 
       최종리포트생성: "최종 리포트 작성",
       최종리포트작성: "최종 리포트 작성",
     }),
     []
   )
+
+  const finalize = () => {
+    setStatusMessage("최종 리포트 작성");
+    setCurrentStep(steps.length - 1);
+    setProgress(100);
+    setIsCompleted(true);
+    const repoId = repositoryIdRef.current;
+    if (repoId) setTimeout(() => router.push(`/analysis/${repoId}`), 1500);
+  };
 
   useEffect(() => {
     if (!repoUrl || hasRequestedAnalysis.current) return
@@ -185,22 +195,13 @@ export function useAnalysisProgress(repoUrl?: string | null) {
         setCurrentStep((prev) => {
           const nextStep = Math.max(prev, stepIndex)
           setProgress(Math.min(((nextStep + 1) / steps.length) * 100, 99))
+          if (nextStep === steps.length - 1) finalize();
           return nextStep
         })
       }
     }
 
-    const handleComplete = (e: CustomEvent<string>) => {
-      setStatusMessage("최종 리포트 작성")
-      setCurrentStep(steps.length - 1)
-      setProgress(100)
-      setIsCompleted(true)
-
-      setTimeout(() => {
-        const repoId = repositoryIdRef.current
-        if (repoId) router.push(`/analysis/${repoId}`)
-      }, 1500)
-    }
+    const handleComplete = () => finalize();
 
     const handleError = () => {
       setError("서버에 문제가 발생했어요.")
