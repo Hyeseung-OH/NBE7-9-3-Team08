@@ -63,7 +63,7 @@ class AnalysisAnalyzeService (
             try {
                 evaluationService.evaluateAndSave(repositoryData, userId)
                 lockManager.refreshLock(cacheKey)
-                safeSendSse(userId, "status", "AI 평가 완료")
+                safeSendSse(userId, "status", "AI 평가")
             } catch (e: BusinessException) {
                 log.error("AI 평가 실패: userId={}, url={}", userId, githubUrl, e)
                 safeSendSse(userId, "error", "AI 평가 실패: ${e.message}")
