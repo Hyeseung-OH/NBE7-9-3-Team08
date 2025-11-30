@@ -53,7 +53,7 @@ github:
 
 jwt:
   cookie-secure: true
-  same-site: None
+  same-site: Lax
   secret: ${SECRET_KEY}
   access-token-expiration-in-milliseconds: 7200000
   refresh-token-expiration-in-milliseconds: 604800000
