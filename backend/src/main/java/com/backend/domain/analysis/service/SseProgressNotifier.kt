@@ -11,7 +11,11 @@ class SseProgressNotifier(
     private val log = LoggerFactory.getLogger(SseProgressNotifier::class.java)
 
     override fun notify(userId: Long, event: String, message: String) {
-        log.debug("[SSE] userId={}, event={}, message={}", userId, event, message)
+        if (event == "complete") {
+            log.info("[SSE] userId={}, event={}, message={}", userId, event, message)
+        } else {
+            log.debug("[SSE] userId={}, event={}, message={}", userId, event, message)
+        }
         progressService.sendEvent(userId, event, message)
     }
 }

@@ -72,6 +72,7 @@ class AnalysisAnalyzeService (
 
             // 4. 완료 전송
             safeSendSse(userId, "complete", "최종 리포트 작성")
+            log.info("SSE 완료 전송: userId={}", userId)
         } catch (e: Exception) {
             log.error("비동기 분석 중 오류: userId={}, url={} / {}", userId, githubUrl, e.message)
             safeSendSse(userId, "error", "분석 처리 중 오류 발생")
