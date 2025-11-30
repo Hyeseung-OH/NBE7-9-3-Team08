@@ -57,7 +57,7 @@ export const analysisApi = {
 
   connectStream: (userId: number) => {
     const controller = new AbortController();
-    const streamUrl = buildBackendUrl(`/api/analysis/stream/${userId}`);
+    const streamUrl = resolveApiUrl(`/analysis/stream/${userId}`);
 
     fetchEventSource(streamUrl, {
       method: "GET",
