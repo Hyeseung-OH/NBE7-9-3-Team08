@@ -9,6 +9,9 @@ import com.backend.global.exception.ErrorCode
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 @Service
 class AnalysisAnalyzeService (
@@ -29,6 +32,7 @@ class AnalysisAnalyzeService (
         repo: String
     ) {
         val cacheKey = "$userId:$githubUrl"
+        var heartbeat: ScheduledExecutorService? = null
 
         if (!lockManager.tryLock(cacheKey)) {
             log.info("이미 진행 중인 분석이 있습니다. userId={}, repo={}", userId, githubUrl)
@@ -37,6 +41,17 @@ class AnalysisAnalyzeService (
 
         try {
             safeSendSse(userId, "status", "분석 시작")
+
+            // heartbeat 시작 - 10초마다 status 전송
+            heartbeat = Executors.newSingleThreadScheduledExecutor().apply {
+                scheduleAtFixedRate({
+                    try {
+                        safeSendSse(userId, "status", "분석 진행 중...")
+                    } catch (ex: Exception) {
+                        log.warn("heartbeat SSE 실패: {}", ex.message)
+                    }
+                }, 10, 10, TimeUnit.SECONDS)
+            }
 
             // 1. Repository 데이터 수집
             val repositoryData = try {
@@ -78,6 +93,7 @@ class AnalysisAnalyzeService (
             safeSendSse(userId, "error", "분석 처리 중 오류 발생")
         } finally {
             try {
+                heartbeat?.shutdownNow()
                 lockManager.releaseLock(cacheKey)
                 log.info("분석 락 해제: cacheKey={}", cacheKey)
             } catch (e: Exception) {
